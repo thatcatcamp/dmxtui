@@ -52,6 +52,25 @@ EOF
     echo "NOTE: Pi 3B detected — udev symlink ttyAMA0 -> ttyS0 installed."
 fi
 
+# Force audio output to 3.5mm headphone jack (1=headphone, 2=HDMI, 0=auto)
+amixer cset numid=3 1 > /dev/null 2>&1 || true
+# Persist across reboots via asound config
+mkdir -p /home/"$USER"/.config
+cat <<'EOF' > /home/"$USER"/.asoundrc
+pcm.!default {
+    type hw
+    card 0
+    device 0
+}
+ctl.!default {
+    type hw
+    card 0
+}
+EOF
+
+# Create audio directory for hippievoice.py
+mkdir -p "$(dirname "$0")/audio"
+
 echo ""
 echo "=== Done ==="
 echo "Expected devices after reboot:"
@@ -59,4 +78,6 @@ echo "  /dev/ttyUSB0  — Enttec Open DMX (FTDI)"
 echo "  /dev/ttyAMA0  — RD03D mmWave radar (Pi 3B, BT disabled)"
 echo "  /dev/ttyS0    — RD03D mmWave radar (Pi 4+)"
 echo ""
-echo "Reboot now, then run: sudo python3 fakelight.py"
+echo "Drop .wav files in $(dirname "$0")/audio/ then:"
+echo "  Terminal 1: sudo python3 fakelight.py"
+echo "  Terminal 2: python3 hippievoice.py"
